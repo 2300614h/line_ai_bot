@@ -70,30 +70,75 @@ def init_chat_history():
         "content": [
             {
                 "type": "text",
-                "text": "spotifyからプレイリストを選んでおすすめしてください。 返答は、「そんなあなたには（プレイリストの名前）がおすすめ！」から文章を始めて、絵文字を多用しながらラジオDJ風に。",
+                "text": "spotifyからプレイリストを選んでおすすめしてください。 返答は、「そんなあなたには（プレイリストの名前）がおすすめ！」から文章を始めて、絵文字を多用しながらラジオDJ風に。urlも送ってください。",
             },
         ],
     }
     chat_history.append(system_role)
 
-def ensure_system_role():
+# def ensure_system_role():
+#     global chat_history
+#
+#     if not any(msg["role"] == "system" for msg in chat_history):
+#         system_role = {
+#             "role": "system",
+#             "content": [
+#                 {
+#                     "type": "text",
+#                     "text": "spotifyからプレイリストを選んでおすすめしてください。 返答は、「そんなあなたには（プレイリストの名前）がおすすめ！」から文章を始めて、絵文字を多用しながらラジオDJ風に。",
+#                 },
+#             ],
+#         }
+#         chat_history.insert(0, system_role)
+
+def ensure_system_role(text=None):
     global chat_history
-    if not any(msg["role"] == "system" for msg in chat_history):
-        system_role = {
+
+    if text and ("Apple" in text or "アップル" in text or "apple" in text):
+        # Apple Musicのシステムロールを設定
+        apple_music_system_role = {
             "role": "system",
             "content": [
                 {
                     "type": "text",
-                    "text": "spotifyからプレイリストを選んでおすすめしてください。 返答は、「そんなあなたには（プレイリストの名前）がおすすめ！」から文章を始めて、絵文字を多用しながらラジオDJ風に。",
+                    "text": "Apple Musicからプレイリストを選んでおすすめしてください。返答は、「Apple Musicなら（プレイリストの名前）がおすすめ！」から文章を始めて、絵文字を多用しながらテンション高めに。",
                 },
             ],
         }
-        chat_history.insert(0, system_role)
+        chat_history.insert(0, apple_music_system_role)
+        print("Apple Music system role inserted.")
+
+    elif text and ("Spotify" in text or "スポティファイ" in text or "spotify" in text):
+        # Spotifyのシステムロールを設定
+        spotify_system_role = {
+            "role": "system",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Spotifyからプレイリストを選んでおすすめしてください。返答は、「そんなあなたには（プレイリストの名前）がおすすめ！」から文章を始めて、絵文字を多用しながらラジオDJ風に。",
+                },
+            ],
+        }
+        chat_history.insert(0, spotify_system_role)
+        print("Spotify system role inserted.")
+    else:
+        # デフォルトの動作（Spotifyのシステムロール）
+        spotify_system_role = {
+            "role": "system",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Spotifyからプレイリストを選んでおすすめしてください。返答は、「そんなあなたには（プレイリストの名前）がおすすめ！」から文章を始めて、絵文字を多用しながらラジオDJ風に。",
+                },
+            ],
+        }
+        chat_history.insert(0, spotify_system_role)
+        print("Spotify system role inserted.")
 
 # 　返信メッセージをAIから取得する関数
 def get_ai_response(from_user, text):
 
-    ensure_system_role()
+    ensure_system_role(text)
     # ユーザのメッセージを記録
     user_msg = {
         "role": "user",
@@ -110,10 +155,10 @@ def get_ai_response(from_user, text):
     parameters = {
         "model": azure_openai_model,  # AIモデル
         "max_tokens": 200,  # 返信メッセージの最大トークン数
-        "temperature": 1,  # 生成の多様性（0: 最も確実な回答、1: 最も多様な回答）
+        "temperature": 0.7,  # 生成の多様性（0: 最も確実な回答、1: 最も多様な回答）
         "frequency_penalty": 0,  # 同じ単語を繰り返す頻度（0: 小さい）
         "presence_penalty": 0,  # すでに生成した単語を再度生成する頻度（0: 小さい）
-        "stop": ["\n"],
+        # "stop": ["\n"],
         "stream": False,
     }
 
@@ -141,11 +186,11 @@ def generate_response(from_user, text):
     #     # チャット履歴を初期化
     #     init_chat_history()
     #     first_message_sent = False
-    #     res = [TextMessage(text="チャットをリセットしました。")]
+    #     res = [TextMessage(text=get_ai_response(from_user, text))]
     if not first_message_sent:
         # AIを使って返信を生成
         first_message_sent = True
-        res = [TextMessage(text="こんにちは😁😁今の気分や好みを教えてください‼あなたにぴったりなSpotifyプレイリストをおすすめします🎧🎶🎸🎼🎤🎹")]
+        res = [TextMessage(text="こんにちは😁😁今の気分や好みを教えてください‼あなたにぴったりなSpotifyプレイリストをおすすめします🎧🎶🎸🎼🎤🎹 Apple Musicにも対応しますよ🍎🍏")]
     else:
         res = [TextMessage(text=get_ai_response(from_user, text))]
     return res
